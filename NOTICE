@@ -1,0 +1,25 @@
+Foundry
+Copyright 2026 Maxsys International Incorporated (maxsys.org)
+
+Foundry is published as an open-source project by Maxsys International
+Incorporated, a nonprofit, through MaxsysLab (https://github.com/MaxsysLab).
+It is built and contributed by CSEAM Technology Corporation, with contributions
+from students, interns, and volunteers.
+
+Licensed under the Apache License, Version 2.0 (the "LICENSE" file in this repository).
+
+Third-party material
+
+The skills under skill-library/frontend/ and skill-library/testing/ are taken from
+Anthropic's public skills repository (https://github.com/anthropics/skills) and are
+licensed under the Apache License, Version 2.0. Copyright Anthropic, PBC. Each skill
+keeps the LICENSE.txt it came with. One file was changed by us:
+skill-library/testing/webapp-testing/scripts/with_server.py now starts servers
+without a shell. The change is marked in the file and described in
+skill-library/README.md.
+
+Acknowledgement
+
+The review step follows a method adapted from Addy Osmani's agent-skills
+(https://github.com/addyosmani/agent-skills, MIT). Other ideas came from spec-kit,
+superpowers, agency-agents and gstack, as the README says. The code is our own.

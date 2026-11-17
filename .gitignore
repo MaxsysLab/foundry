@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+dist/
+build/
+*.egg-info/
+.env
+
+# uv.lock is deliberately NOT ignored. Foundry is an application, not a library:
+# it pins, so that a green check can be repeated and the dependency scanners have
+# something to read.

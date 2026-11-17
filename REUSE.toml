@@ -1,0 +1,27 @@
+version = 1
+SPDX-PackageName = "Foundry"
+SPDX-PackageSupplier = "Maxsys International Incorporated <https://maxsys.org>"
+SPDX-PackageDownloadLocation = "https://github.com/MaxsysLab/maxsys-foundry"
+
+# Licence and copyright for every file in the repository. New source files may carry
+# an in-file SPDX-License-Identifier header as well; this entry covers those that
+# do not. The licence text is in LICENSE and LICENSES/Apache-2.0.txt.
+[[annotations]]
+path = ["**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Maxsys International Incorporated and Foundry contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# The bundled skills are Anthropic's, from https://github.com/anthropics/skills.
+[[annotations]]
+path = ["skill-library/frontend/**", "skill-library/testing/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Anthropic, PBC"
+SPDX-License-Identifier = "Apache-2.0"
+
+# One of them was changed by us (see skill-library/README.md).
+[[annotations]]
+path = ["skill-library/testing/webapp-testing/scripts/with_server.py"]
+precedence = "override"
+SPDX-FileCopyrightText = ["Anthropic, PBC", "2026 Maxsys International Incorporated and Foundry contributors"]
+SPDX-License-Identifier = "Apache-2.0"
