@@ -21,3 +21,5 @@ What changed for this public copy:
 - The check with SkillWarden asks it to leave out the workspace's own `.git` folder,
   and still works with a SkillWarden that does not know that option.
 - The model names for the API path are current.
+- The README now tells how the first live build with this copy came out (November
+  2026), and the roadmap carries what that build showed.

@@ -81,6 +81,10 @@ You need Linux, Python 3.12 or 3.13, [uv](https://docs.astral.sh/uv/), git,
 [Claude Code](https://code.claude.com/docs/en/setup) on your `PATH`, and an Anthropic
 API key.
 
+Foundry runs each task's command with the tools on your machine, so the machine also
+needs what the app's own stack needs. For a Python app that is `python` and `pip`, for
+example in an activated virtual environment.
+
 Foundry is built on the Claude Agent SDK, and Anthropic asks that tools built on it use
 an API key and not a claude.ai sign-in
 ([their note](https://code.claude.com/docs/en/agent-sdk/overview)). So Foundry starts a
@@ -154,18 +158,47 @@ In June 2026 we ran three live builds of one small app, a bookmark manager with
 FastAPI, SQLite and plain JavaScript. The first built and passed its own 31 tests. The
 second shipped a stored XSS that the review rated too low. That is why the reviewer
 is now told to rate security findings as blocking, and why a web app gets a security
-task. The third came out with that hole closed and no security finding.
+task. The third came out with that hole closed and no security finding. Those builds
+ran on an earlier version.
 
-Those builds ran on an earlier version. The code has changed since, mostly in how
-parallel work is merged and in what Foundry refuses, and since then it has been tested
-only by its automated tests: 419 of them, with strict type checking and lint, on
-Python 3.12 and 3.13. We have not yet repeated a live build with this public copy.
-That is the next thing we will do, and the result will be written here.
+In November 2026 we ran one live build with this copy, from the brief in the Start
+section above. Foundry wrote down eight things the app must do, planned nine tasks,
+each with a command that proves it, and built a JSON API with FastAPI and SQLite. The
+brief did not ask for a web page, so it made none.
 
-What we have not tried: heavier stacks such as Next.js, a build with many tasks truly
-in parallel, and other kinds of project than a web app. When tasks depend on each
-other and share one virtual environment, use `--isolation none`. A verify step that
-could not start the app at all is reported as inconclusive and does not block.
+It did not go through in one run. Two tasks ran side by side, the README and the
+security hardening. The worker writing the README also changed two code files, and
+when the security work came back, its merge conflicted. Foundry refused the merge,
+marked the task failed, left the repository clean and said the build was not done. We
+ran the build again from its session file, as step 3 above describes. The security
+task ran again on the new base and the build finished: nine of nine tasks, the
+verifier's checks passed against the running app, a stop and a restart on the same
+database among them, and the review approved it at 90 with three low findings.
+
+We did not take its word for it. We ran the app's 273 tests ourselves and sent our
+own requests for each of the eight points, and they hold. The two runs together took
+19 minutes. They used about two million input tokens, most of them read from cache,
+and about one hundred thousand output tokens, on Claude Opus 5.5 and Claude Sonnet 5.5.
+
+Read that result for what it is: one small Python app, with two tasks in parallel at
+the most. We ran it on a machine of our own, inside a sandbox wrapper we wrote for
+that machine, which is not part of Foundry yet. We started it from Python, with our
+own Claude Code sign-in on our own machine. The `foundry build` command with an API
+key, as the Start section describes it, is covered by the automated tests (419 of
+them, with strict type checking and lint, on Python 3.12 and 3.13) and has not yet
+been used for a live build.
+
+The build also showed us things to fix, and they are on the
+[roadmap](docs/ROADMAP.md). This page did not say that the machine needs the tools of
+the app's own stack. An expired sign-in gives an empty error message. A worker can
+step outside its task. And the worktrees Foundry keeps pile up, with no command to
+clear them.
+
+What we have not tried: heavier stacks such as Next.js, an app with a web page built
+by this copy, a build with many tasks truly in parallel, and other kinds of project
+than a web app. When tasks depend on each other and share one virtual environment,
+use `--isolation none`. A verify step that could not start the app at all is reported
+as inconclusive and does not block.
 
 ## How it compares
 
