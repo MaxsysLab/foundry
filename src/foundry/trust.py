@@ -1,13 +1,14 @@
-"""The trust boundary Foundry can enforce without a sandbox of its own.
+"""The trust boundary of a build that is started without `foundry sandbox`.
 
-Workers run `claude` with the operator's credentials, filesystem and network (see
-README, "Before you run it"): Foundry has no process sandbox of its own, so it must
-not run on behalf of input it cannot trust unless something else provides one. Two
-modes exist, and nothing in between:
+Outside a sandbox, workers run `claude` with the operator's credentials, filesystem
+and network (see README, "Before you run it"), so a build must not run on behalf of
+input it cannot trust unless something provides a boundary. Two modes exist, and
+nothing in between:
 
-* **sandbox** — a container/VM wrapper attests it with `--sandbox NAME` or
-  `FOUNDRY_SANDBOX=NAME`. The name is recorded and reported; Foundry does not (and
-  cannot) check it. Set it only from the wrapper, never in a shell profile.
+* **sandbox** — `foundry sandbox` (see `sandbox/`), or a container/VM wrapper of the
+  operator's own, attests it with `--sandbox NAME` or `FOUNDRY_SANDBOX=NAME`. The
+  name is recorded and reported; Foundry does not (and cannot) check it. Set it only
+  from the wrapper, never in a shell profile.
 * **trusted-operator** — an operator at a terminal runs a build of their own brief
   in their own workspace, accepting that the workers act as them.
 
@@ -78,8 +79,9 @@ def resolve(
         raise TrustRefused(
             f"Foundry refuses to run unattended on a bare host ({why}, and no sandbox is "
             "attested): its workers would run with the operator's credentials, files and "
-            "network. Run it inside a container/VM wrapper that sets --sandbox NAME or "
-            f"{SANDBOX_ENV}=NAME, or run it yourself at a terminal as the trusted operator "
-            f"(see {README_SECTION}). Nothing was started and the workspace was not touched."
+            "network. Run it with `foundry sandbox build`, or inside a container/VM wrapper "
+            f"that sets --sandbox NAME or {SANDBOX_ENV}=NAME, or run it yourself at a "
+            f"terminal as the trusted operator (see {README_SECTION}). Nothing was started "
+            "and the workspace was not touched."
         )
     return Trust("trusted-operator")

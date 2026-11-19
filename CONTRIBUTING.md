@@ -6,7 +6,7 @@ questions are encouraged and small pull requests are great.
 
 ## New to open source? Start here
 
-1. Read the code. It is about 3,800 lines, and `src/foundry/engine.py` is the place to
+1. Read the code. It is about 5,700 lines, and `src/foundry/engine.py` is the place to
    begin: one function, `build`, runs the whole pipeline from top to bottom.
 2. Run the tests on your own machine (`make dev`, then `make test`). They need no API
    key and call no model.
@@ -35,7 +35,8 @@ people's issues all count.
 - [uv](https://docs.astral.sh/uv/) (`uv --version`) and git
 
 You need Claude Code and an API key only to run a real build. Read "Before you run
-it" in the README first, and run real builds in a container or a virtual machine.
+it" in the README first, and run real builds inside the sandbox. For the sandbox and
+its tests you need bubblewrap; without it those tests are skipped.
 
 ## Build, test, run
 
@@ -49,7 +50,7 @@ make typecheck    # mypy --strict
 ## How the code is laid out
 
 ```
-src/foundry/cli.py           the commands: foundry build, foundry vet
+src/foundry/cli.py           the commands: foundry build, foundry vet, foundry sandbox
 src/foundry/engine.py        the build: discovery, plan, tasks, verify, review
 src/foundry/trust.py         when Foundry refuses to run unattended
 src/foundry/auth.py          the API sign-in a build needs
@@ -72,6 +73,7 @@ src/foundry/models.py        the plan, the tasks, the reports and the build's re
 src/foundry/control.py       the approval of a plan before the build
 src/foundry/providers/       the planner's model: the API, or the `claude` command
 src/foundry/procenv.py       the environment every process Foundry starts is given
+src/foundry/sandbox/         the sandbox: bubblewrap round a whole build, and its proof
 tests/                       the tests
 ```
 
@@ -88,9 +90,9 @@ could not run as a check that passed.
 thousand lines, and a person can read all of it. Prefer a few lines of our own to a
 new dependency, and discuss first if you think one is needed.
 
-## Changing what Foundry refuses, what counts as done, or how work is merged
+## Changing what Foundry refuses, what counts as done, how work is merged, or the sandbox
 
-These three are where a mistake does harm, so a change to any of them needs a little
+These four are where a mistake does harm, so a change to any of them needs a little
 more than a passing test:
 
 1. **A test for the case that must fail**, beside the test for the case that works.
@@ -99,7 +101,9 @@ more than a passing test:
    merges over an edit it did not make. Its tests use real git repositories. A change
    there keeps every one of them passing and adds one for the new case.
 3. **A second person who tries to break it.** Ask in the pull request for someone other
-   than you to look for the input your change did not think of.
+   than you to look for the input your change did not think of. In the sandbox, a
+   check is made on the thing that was opened, never on the name it was asked for
+   by, and every line of the proof has a test that shows it can say `REACHED`.
 
 ## Making a change
 
@@ -130,7 +134,8 @@ A check on every pull request enforces it. Fix a missing sign-off with
 
 - A second project type beside the web app, such as a command-line tool, with the
   tasks it must always have (`archetypes.py`).
-- A container recipe, so that "run it in a container" is one command.
+- Run `foundry sandbox proof` on your own system and tell us what it printed. Other
+  distributions and 64-bit ARM are untried.
 - Tests for a part of the code that has few.
 - Clearer wording in a message Foundry prints.
 

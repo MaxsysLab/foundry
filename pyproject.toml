@@ -51,6 +51,9 @@ packages = ["src/foundry"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "bubblewrap: starts a real sandbox (the proof or a harmless command); skipped where bubblewrap cannot start one",
+]
 
 [tool.ruff]
 line-length = 100

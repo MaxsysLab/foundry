@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import dataclasses
+import os
 import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.text import Text
 
 from foundry import __version__, auth, constants, fsprobe, trust
+from foundry import sandbox as box
 from foundry.control import Controller, Revise
 from foundry.engine import build
 from foundry.isolation import HistoryUnreadableError
@@ -290,6 +293,189 @@ def vet(
         f"(safe to adopt; {_lit(len(results) - len(clean))} need review/upgrade)."
     )
     raise typer.Exit(0 if len(clean) == len(results) else 1)
+
+
+# --- foundry sandbox: the same commands, inside Foundry's own sandbox
+
+sandbox_app = typer.Typer(
+    add_completion=False,
+    help=(
+        "Run a build, or any command, inside Foundry's own sandbox: bubblewrap, without "
+        "root. The sandbox's options come before the word build, run or proof."
+    ),
+)
+app.add_typer(sandbox_app, name="sandbox")
+
+# The usage errors of the build command's own parser. typer does not export their
+# base class under one name in all its versions; BadParameter descends from it.
+_UsageError: type[Exception] = next(
+    c for c in typer.BadParameter.__mro__ if c.__name__ == "ClickException"
+)
+_PASS_ON = {"allow_extra_args": True, "ignore_unknown_options": True}
+
+
+@sandbox_app.callback()
+def sandbox_main(
+    ctx: typer.Context,
+    name: str | None = typer.Option(
+        None,
+        "--name",
+        help="Keep the sandbox's own home and /tmp under this name (default: one made "
+        "from the workspace, so a resumed build finds its own).",
+    ),
+    offline: bool = typer.Option(False, "--offline", help="No network at all inside."),
+    ro: Annotated[
+        list[str] | None,
+        typer.Option("--ro", help="Also show this file or folder inside, read-only, same path."),
+    ] = None,
+    path: Annotated[
+        list[str] | None,
+        typer.Option("--path", help="Put this folder on the PATH inside (under /usr or --ro)."),
+    ] = None,
+    tool: Annotated[
+        list[str] | None,
+        typer.Option("--tool", help="Put this one program on the PATH inside, under its name."),
+    ] = None,
+    env: Annotated[
+        list[str] | None,
+        typer.Option("--env", help="Pass this variable of your environment to the inside."),
+    ] = None,
+    env_file: str | None = typer.Option(
+        None,
+        "--env-file",
+        help="Pass the NAME=VALUE lines of this file to the inside. Only you may be "
+        "able to read the file.",
+    ),
+    venv: bool = typer.Option(
+        False,
+        "--venv",
+        help="Give the inside a Python virtual environment of its own, first on its "
+        "PATH, so that `python` and `pip` work for the app being built.",
+    ),
+    memory: str | None = typer.Option(
+        None, "--memory", help="A ceiling on memory, such as 3G (needs systemd)."
+    ),
+    dns: Annotated[
+        list[str] | None,
+        typer.Option("--dns", help="Name these resolvers inside, in place of the machine's."),
+    ] = None,
+) -> None:
+    ctx.obj = box.Options(
+        name=name,
+        offline=offline,
+        ro=tuple(ro or ()),
+        path=tuple(path or ()),
+        tool=tuple(tool or ()),
+        env=tuple(env or ()),
+        env_file=env_file,
+        venv=venv,
+        memory=memory,
+        dns=tuple(dns or ()),
+    )
+
+
+def _refused(exc: Exception) -> typer.Exit:
+    err.print(f"[red]{_lit(exc)}[/]")
+    return typer.Exit(2)
+
+
+def _ready(
+    options: box.Options, workspace: str, cwd: str, *, tools: tuple[str, ...], building: bool
+) -> box.Sandbox:
+    """The sandbox for `workspace`, decided, tried once and described; or exit 2."""
+    try:
+        made = box.prepare(options, workspace, need_claude=building)
+        if building:
+            auth.require_api_auth(made.env)
+        box.check(made, tools, cwd=cwd)
+        if options.venv:
+            box.make_venv(made)
+    except (box.SandboxRefused, auth.AuthRefused) as exc:
+        raise _refused(exc) from None
+    except OSError as exc:  # a folder that changed under the checks, a full disk
+        raise _refused(
+            box.SandboxRefused(f"the sandbox could not be prepared ({exc}). Nothing was started.")
+        ) from None
+    for line in box.describe(made):
+        err.print(f"[dim]{_lit(line)}[/]")
+    return made
+
+
+def _started(made: box.Sandbox, command: list[str], cwd: str | None) -> int:
+    """Start `command` inside and return its exit code; or exit 2 when the sandbox
+    refuses at this last step (a folder that changed since it was checked)."""
+    try:
+        return box.launch(made, command, cwd=cwd, feed=True)
+    except box.SandboxRefused as exc:
+        raise _refused(exc) from None
+    except OSError as exc:
+        raise _refused(
+            box.SandboxRefused(f"the sandbox could not be started ({exc}). Nothing was started.")
+        ) from None
+
+
+@sandbox_app.command("build", context_settings=_PASS_ON)
+def sandbox_build(ctx: typer.Context) -> None:
+    """Run `foundry build` inside the sandbox. Everything after the word build is
+    given to it as it is: the brief, -w, -i, --session and the rest."""
+    given = list(ctx.args)
+    parser = getattr(typer.main.get_command(app), "commands")["build"]  # noqa: B009
+    try:
+        with parser.make_context("foundry sandbox build", list(given)) as parsed:
+            params = dict(parsed.params)
+    except _UsageError as exc:
+        raise _refused(exc) from None
+    workspace = str(params["workspace"])
+    options: box.Options = ctx.obj
+    # A skill library and a constitution are read, never written: show them.
+    extra = [p for p in (params.get("skills"), params.get("constitution")) if p]
+    options = dataclasses.replace(
+        options, ro=(*options.ro, *[p for p in extra if os.path.exists(p)])
+    )
+    if params.get("session"):
+        try:
+            box.require_session_inside(workspace, str(params["session"]))
+        except box.SandboxRefused as exc:
+            raise _refused(exc) from None
+    cwd = os.getcwd()
+    made = _ready(options, workspace, cwd, tools=("sh", "git", "claude"), building=True)
+    command = [sys.executable, "-P", "-m", "foundry.cli", "build", *given]
+    raise typer.Exit(_started(made, command, cwd))
+
+
+@sandbox_app.command("run", context_settings=_PASS_ON)
+def sandbox_run(
+    ctx: typer.Context,
+    workspace: str = typer.Option(
+        ...,
+        "--workspace",
+        "-w",
+        help="The one folder the command may write, beside the sandbox's own home and /tmp.",
+    ),
+) -> None:
+    """Run any command inside the sandbox, in the workspace, for example to look at
+    what a build left: foundry sandbox run -w ./out -- git log --oneline"""
+    command = list(ctx.args)
+    if not command:
+        err.print("[red]Give the command to run after the options, behind `--`.[/]")
+        raise typer.Exit(2)
+    made = _ready(ctx.obj, workspace, "", tools=(), building=False)
+    raise typer.Exit(_started(made, command, None))
+
+
+@sandbox_app.command("proof")
+def sandbox_proof(ctx: typer.Context) -> None:
+    """Try each door from inside a sandbox made new for it, and print what is
+    closed and what is left open on this machine."""
+    try:
+        code = box.prove(ctx.obj)
+    except box.SandboxRefused as exc:
+        raise _refused(exc) from None
+    except OSError as exc:
+        raise _refused(
+            box.SandboxRefused(f"the proof could not be prepared ({exc}). Nothing was started.")
+        ) from None
+    raise typer.Exit(code)
 
 
 if __name__ == "__main__":

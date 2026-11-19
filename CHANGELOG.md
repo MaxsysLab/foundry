@@ -23,3 +23,7 @@ What changed for this public copy:
 - The model names for the API path are current.
 - The README now tells how the first live build with this copy came out (November
   2026), and the roadmap carries what that build showed.
+- Foundry has a sandbox of its own: `foundry sandbox build`, `run` and `proof` put a
+  whole build inside bubblewrap, without root. `docs/SANDBOX.md` says what it closes
+  and what it leaves open.
+- A session file's folder is made when the session is first saved.

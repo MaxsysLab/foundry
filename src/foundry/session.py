@@ -17,6 +17,8 @@ def load(path: str | Path) -> BuildState | None:
 
 def save(path: str | Path, state: BuildState) -> None:
     p = Path(path)
+    # The folder may not be there yet (`-w ./out --session ./out/.foundry/session.json`).
+    p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_name(p.name + ".tmp")
     tmp.write_text(state.model_dump_json(indent=2), encoding="utf-8")
     os.replace(tmp, p)  # atomic

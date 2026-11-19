@@ -19,6 +19,11 @@ credit, tell us how to name you.
 
 ## What counts as a vulnerability here
 
+- A way out of `foundry sandbox`: anything running inside that reads your files or
+  keys, writes outside the workspace and the sandbox's own folders, gains a
+  privilege, reaches your terminal, or makes the command outside do something for
+  it. So is a line of `foundry sandbox proof` that says `closed` for a door that is
+  open.
 - A way to make Foundry start a build that it says it refuses: unattended on a bare
   host, on a filesystem that ignores case, or without an API sign-in.
 - A way to have a build reported as done when a task's command failed, or when the
@@ -31,13 +36,14 @@ credit, tell us how to name you.
 
 ## What does not need a private report
 
-What a worker does inside the workspace is by design. Workers are Claude Code sessions
-with permission checks switched off, acting with the operator's account, files and
-network, and the README says so. That a worker can read a file on the machine or reach
-the network is the known limit that the sandbox on the [roadmap](docs/ROADMAP.md) is
-meant to close. Ideas and help for that are welcome in the open. The same holds for
-the plan's own commands: Foundry runs them through a shell in the workspace, and the
-plan is something you can read and approve first (`-i`).
+What a worker does inside the workspace is by design. Outside the sandbox, workers are
+Claude Code sessions with permission checks switched off, acting with the operator's
+account, files and network, and the README says so. Inside the sandbox, what
+[docs/SANDBOX.md](docs/SANDBOX.md) lists as left open is known as well: the machine's
+network, the API key, and the build's own verdict. Ideas and help for closing those
+are welcome in the open. The same holds for the plan's own commands: Foundry runs
+them through a shell in the workspace, and the plan is something you can read and
+approve first (`-i`).
 
 A weakness in an app that Foundry built is a finding about the review step. Open an
 issue with the brief and what the review missed. If you would rather not publish it

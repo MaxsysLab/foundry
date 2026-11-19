@@ -5,39 +5,45 @@ interests you, open an issue and say so before you start, so that two people do 
 build the same thing. Small steps are welcome; none of these has to arrive in one pull
 request.
 
-## 1. A sandbox of its own
+## 1. The sandbox: what is there, and what comes next
 
-Today a worker is a Claude Code session with permission checks switched off. It acts
-with the operator's account, files and network, and the only protection is the
-container or virtual machine the operator puts around Foundry. That is why Foundry
-refuses to run unattended on a bare host, and it is the first thing to change.
+A worker is a Claude Code session with permission checks switched off. Our first plan
+was to use Claude Code's own sandbox around each worker's shell. Reading it closely
+changed the order. That sandbox covers a worker's shell commands only, and Foundry
+itself runs what the workers wrote: the plan's commands, the app under test, and git
+in a repository whose hooks a worker can write. So the boundary had to go round the
+whole build first.
 
-The design we have chosen is to use what Claude Code already provides, through the
-Claude Agent SDK, and not to write a sandbox of our own:
+That first step is in the repository: `foundry sandbox`, a whole build inside
+bubblewrap without root, with a proof anyone can run ([SANDBOX.md](SANDBOX.md)). What
+is still open, in the order we think it matters:
 
-- the SDK's sandbox settings for the shell: a list of paths a worker may write, a list
-  of hosts it may reach, and credentials kept out of its reach;
-- the set of tools a worker has, limited by role, in place of every tool with every
-  permission;
-- a hook before each tool call that can refuse it and that writes a record.
-
-A first step that stands alone: a tested container recipe in this repository, so that
-"run it in a container" is one command.
-
-Two things belong to the same work. The session file a build resumes from sits today
-where the workers can write, and a resumed build trusts what it says; it should sit
-where only the operator can write. And the live build of November 2026 ran inside a
-wrapper written for one machine of ours. A recipe that anyone can run is still to be
-written.
+- **The network without root.** Today the inside has the machine's own network unless
+  `--offline` is given, and shutting out the local network takes root. The plan: no
+  network inside at all, and a small proxy outside that lets through the hosts a
+  build needs. The same proxy could add the API key on the way out, so that the key
+  never enters the sandbox.
+- **Limits inside the boundary.** Each worker's tools limited by its role, the
+  operator's Claude settings kept out of the workers' sessions, and a hook before
+  each tool call that writes a record and can refuse.
+- **The build's verdict.** Inside the sandbox the workers and Foundry are the same
+  user, so a worker that set out to cheat could change the session file a build
+  resumes from. Foundry's own records should sit where the workers cannot write.
+- **More machines.** The proof has run on one machine of ours. Other distributions,
+  64-bit ARM and systems that restrict user namespaces are untried.
+- **More eyes.** One reviewer went over it four times and found real faults in the
+  first two. A sandbox is the kind of code that a second and a third reader make
+  better. [SECURITY.md](../SECURITY.md) says how to tell us about a way out.
+- **A live build inside it,** started with `foundry sandbox build` and an API key;
+  see the next item.
 
 ## 2. A live build through the command, on an API key
 
 The first live build with this copy was made in November 2026, and the README says
 how it came out. It was started from Python with our own sign-in, on a machine of
 ours. What is still owed is a build started the way the README tells a stranger to
-start one: `foundry build`, with an API key, inside a container. Its result goes into
-the README as it comes out: what passed, what failed, how long it took and what it
-cost.
+start one: `foundry sandbox build`, with an API key. Its result goes into the README
+as it comes out: what passed, what failed, how long it took and what it cost.
 
 ## 3. Heavier stacks and real parallel work
 

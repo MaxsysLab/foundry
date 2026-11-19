@@ -24,9 +24,9 @@ from being called done. So does a verify step or a review that fails to run. One
 limit is on the roadmap: a task whose plan gave it no command still rests on the
 worker's report and on the checks that come after.
 
-**It is small enough to read.** About 3,800 lines of Python and five dependencies, with
-no agent framework underneath. One person can read all of it in a day, which is a good
-way to learn how such a system is put together.
+**It is small enough to read.** About 5,700 lines of Python and five dependencies, with
+no agent framework underneath. One person can read all of it in a day or two, which is
+a good way to learn how such a system is put together.
 
 ## How a build goes
 
@@ -56,19 +56,42 @@ A build can be stopped and picked up again from its session file.
 ## Before you run it
 
 Foundry's workers are Claude Code sessions with permission checks switched off, so
-that a build can run without someone approving every step. They act with your account,
-your files and your network, and Foundry does not yet have a sandbox of its own. So
-run it where that is safe: in a container or a virtual machine that holds the
-workspace and nothing else you care about. Building the sandbox into Foundry is the
-first item on the [roadmap](docs/ROADMAP.md), and a good place to help.
+that a build can run without someone approving every step. Left to themselves they
+act with your account, your files and your network. So Foundry has a sandbox of its
+own, and a build belongs inside it:
+
+```bash
+uv run foundry sandbox build "your brief" -w ./out
+```
+
+Inside, a build can write in its workspace and in a home and a `/tmp` of its own. It
+can read the system's programs, Foundry and Claude Code. Your keys, your sign-ins and
+the rest of your files are not there. It needs Linux and
+[bubblewrap](https://github.com/containers/bubblewrap), and no root. You do not have
+to take our word for it: `uv run foundry sandbox proof` tries each door from the
+inside, on your machine, and prints what it found.
+
+Two things it does not close, and you should know them before you start. The network
+inside is your machine's own, because a build needs the internet for the model and
+for packages; with it a build can also reach your local network and the services that
+listen on the machine itself. And the API key is passed in, because the workers call
+the model with it. Use a key made for this, with a spending limit.
+[The sandbox page](docs/SANDBOX.md) has the whole account: what is closed, what is
+left open, and how to shut the local network out when you have root. For a brief or a
+skill library from someone you do not trust, a virtual machine around it is still the
+right choice, since the sandbox shares your machine's kernel.
 
 Foundry would rather refuse than run half-protected. It exits with code 2, before any
 model is called, in these cases:
 
-- **No terminal, and no sandbox named.** A run from cron, CI or a pipe is refused
-  unless the container or VM wrapper that started it names itself with
-  `--sandbox NAME`. Foundry records the name and cannot check it, so set it only in
-  the wrapper. At a terminal, without a sandbox, it runs as you and says so.
+- **A sandbox that cannot be made as promised.** Without bubblewrap, or where
+  bubblewrap cannot start, `foundry sandbox` stops there. It does not fall back to
+  running the build unprotected. It also refuses a workspace that is your home, a
+  folder where keys are kept, or a path that leads through a link.
+- **No terminal, and no sandbox.** Outside the sandbox, a run from cron, CI or a pipe
+  is refused, unless a container or VM wrapper of your own names itself with
+  `--sandbox NAME`. Foundry records that name and cannot check it. At a terminal,
+  without a sandbox, it runs as you and says so.
 - **A filesystem that ignores case** (the default on macOS and Windows). Its checks
   treat `README.md` and `readme.md` as two files, so it does not build where they are
   one. To look, it creates the workspace folder and a small probe inside it, and
@@ -78,12 +101,12 @@ model is called, in these cases:
 ## Start
 
 You need Linux, Python 3.12 or 3.13, [uv](https://docs.astral.sh/uv/), git,
-[Claude Code](https://code.claude.com/docs/en/setup) on your `PATH`, and an Anthropic
-API key.
+bubblewrap, [Claude Code](https://code.claude.com/docs/en/setup) on your `PATH`, and an
+Anthropic API key.
 
 Foundry runs each task's command with the tools on your machine, so the machine also
-needs what the app's own stack needs. For a Python app that is `python` and `pip`, for
-example in an activated virtual environment.
+needs what the app's own stack needs. For a Python app that is `python` and `pip`. In
+the sandbox, `--venv` gives the build a virtual environment of its own for that.
 
 Foundry is built on the Claude Agent SDK, and Anthropic asks that tools built on it use
 an API key and not a claude.ai sign-in
@@ -101,19 +124,25 @@ The last of these names Microsoft Foundry, which has nothing to do with this too
    uv sync
    ```
 
-2. Inside your container or VM, set the key and give it a small brief:
+2. Set the key and give it a small brief, inside the sandbox:
 
    ```bash
    export ANTHROPIC_API_KEY=your-key
-   uv run foundry build "a bookmark manager with tags, SQLite and a REST API" \
-     -w ./out -i --session run.json
+   uv run foundry sandbox --venv build \
+     "a bookmark manager with tags, SQLite and a REST API" \
+     -w ./out -i --session ./out/.foundry/session.json
    ```
+
+   The sandbox's own options come before the word `build`. What comes after it is
+   what you would give `foundry build` without a sandbox, and the table below lists
+   it. In the sandbox the session file has to be inside the workspace, since the
+   build can write nowhere else.
 
 3. If it stops, run the same command again without the brief. It picks up from the
    session file:
 
    ```bash
-   uv run foundry build -w ./out --session run.json
+   uv run foundry sandbox --venv build -w ./out --session ./out/.foundry/session.json
    ```
 
 A build makes many model calls, some of them on the strongest model. Start with a
@@ -181,12 +210,21 @@ own requests for each of the eight points, and they hold. The two runs together 
 and about one hundred thousand output tokens, on Claude Opus 5.5 and Claude Sonnet 5.5.
 
 Read that result for what it is: one small Python app, with two tasks in parallel at
-the most. We ran it on a machine of our own, inside a sandbox wrapper we wrote for
-that machine, which is not part of Foundry yet. We started it from Python, with our
-own Claude Code sign-in on our own machine. The `foundry build` command with an API
-key, as the Start section describes it, is covered by the automated tests (419 of
-them, with strict type checking and lint, on Python 3.12 and 3.13) and has not yet
-been used for a live build.
+the most. We ran it on a machine of our own, inside a wrapper we wrote for that
+machine. We started it from Python, with our own Claude Code sign-in on our own
+machine. The `foundry build` command with an API key, as the Start section describes
+it, is covered by the automated tests (508 of them, with strict type checking and
+lint, on Python 3.12 and 3.13) and has not yet been used for a live build.
+
+Foundry's own sandbox was made from that wrapper afterwards, and it is new. It passes
+its own proof on one machine of ours (Debian 13 under WSL 2 on x86-64, bubblewrap
+0.12.0), with and without a network. Before we wrote this we set a reviewer to break
+it. The first two passes found ways through, and those are closed: one let a build
+read the environment of the person who started it, the other let a build lead a later
+command out of its workspace through a link. The third pass found no way through and
+four smaller things in the command outside, and the fourth confirmed their repair. No
+live build has run inside the sandbox yet, and we have not tried it on other systems.
+If you run the proof on yours, tell us what it printed.
 
 The build also showed us things to fix, and they are on the
 [roadmap](docs/ROADMAP.md). This page did not say that the machine needs the tools of
@@ -206,10 +244,10 @@ There are larger and better-known open-source tools that build software with AI
 agents, among them OpenHands, MetaGPT, ChatDev and gpt-pilot. They do more than
 Foundry does. Foundry works with Claude only and builds web apps only.
 
-Foundry is the small one. Its Python source is about 170 kB, against 850 kB to
-3,200 kB for the Python tools among those four (measured on GitHub on 16 November
-2026). We have not run them side by side on the same briefs, so we make no claim
-about whose apps come out better.
+Foundry is the small one. Its Python source is about 250 kB, against 850 kB to
+3,200 kB for the Python tools among those four (theirs measured on GitHub on 16
+November 2026). We have not run them side by side on the same briefs, so we make no
+claim about whose apps come out better.
 
 ## Where the ideas came from
 

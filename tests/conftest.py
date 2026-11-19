@@ -70,6 +70,25 @@ def _never_the_real_worker(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def _never_the_real_sandbox(request, monkeypatch):
+    """No test starts bubblewrap unless it is marked `bubblewrap`, and those run the
+    proof or a harmless command, never a build. A sandbox started by a test runs in a
+    process of its own, where the guards above do not reach; so the two functions that
+    start one fail here, loudly."""
+    if request.node.get_closest_marker("bubblewrap"):
+        return
+    from foundry import sandbox
+
+    def refuse(*_a, **_k):
+        raise AssertionError(
+            "a test reached the real sandbox: patch sandbox.launch and sandbox.capture"
+        )
+
+    monkeypatch.setattr(sandbox, "launch", refuse)
+    monkeypatch.setattr(sandbox, "capture", refuse)
+
+
 _PLAN = """{
   "app_name": "todo", "stack": "Python", "summary": "a todo app",
   "tasks": [
