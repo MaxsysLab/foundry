@@ -642,7 +642,12 @@ def test_the_files_written_for_the_inside_name_one_user(machine):
         "/etc/passwd", "/etc/group", "/etc/hosts", "/etc/nsswitch.conf", "/etc/resolv.conf"
     }  # fmt: skip
     assert f"foundry:x:{os.getuid()}:{os.getgid()}:".encode() in files["/etc/passwd"]
-    assert b"joseph" not in files["/etc/passwd"] + files["/etc/hosts"]
+    # Nothing of the machine outside is in them: no login of its own, no host name.
+    logins = [line.split(":")[0] for line in files["/etc/passwd"].decode().splitlines()]
+    assert logins == ["root", "foundry", "nobody"]
+    hosts = files["/etc/hosts"].decode().split()
+    names = {word for word in hosts if word not in ("127.0.0.1", "::1")}
+    assert names == {"localhost", "foundry-sandbox", "ip6-localhost", "ip6-loopback"}
 
 
 def test_the_links_on_the_way_to_a_program_are_found(tmp_path):
