@@ -9,9 +9,11 @@ it) if SkillWarden isn't installed, so a missing scanner never hard-blocks a bui
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
-from pathlib import Path
+import tempfile
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from pydantic import BaseModel
@@ -105,6 +107,51 @@ def critical_findings(path: str | Path) -> list[ReviewFinding] | None:
     if not out and not _scan_complete(data):
         return None
     return out
+
+
+def committed_critical_findings(path: str | Path) -> list[ReviewFinding] | None:
+    """Scan HEAD's blobs in isolation, never workspace edits or retained worktrees.
+
+    Read blobs directly: git archive's export-ignore attributes can omit committed
+    files. A symlink is scanned as its committed target text, never followed. A
+    submodule or an unreadable tree cannot provide complete corroboration.
+    """
+
+    def git_bytes(*args: str) -> bytes:
+        return subprocess.run(
+            ["git", "-C", str(path), *args],
+            check=True,
+            capture_output=True,
+            timeout=constants.SKILLWARDEN_TIMEOUT,
+            env=procenv.clean_env(),
+        ).stdout
+
+    try:
+        tree = git_bytes("ls-tree", "-rz", "--full-tree", "HEAD")
+        with tempfile.TemporaryDirectory(prefix="foundry-scan-") as directory:
+            snapshot = Path(directory)
+            for entry in tree.split(b"\0"):
+                if not entry:
+                    continue
+                metadata, name = entry.split(b"\t", 1)
+                _mode, kind, oid = metadata.split()
+                if kind != b"blob":
+                    return None
+                relative = PurePosixPath(os.fsdecode(name))
+                if relative.is_absolute() or ".." in relative.parts:
+                    return None
+                target = snapshot.joinpath(*relative.parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(git_bytes("cat-file", "blob", oid.decode("ascii")))
+            findings = critical_findings(snapshot)
+            if findings is not None:
+                for finding in findings:
+                    file = Path(finding.file)
+                    if file.is_absolute() and file.is_relative_to(snapshot):
+                        finding.file = file.relative_to(snapshot).as_posix()
+            return findings
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
 
 
 def vet_library(root: str | Path) -> list[VetResult] | None:
