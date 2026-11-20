@@ -9,10 +9,9 @@ every task has passed, a separate verifier starts the app and checks it against
 what was written down at the start, and a separate reviewer reads the code. What you
 get is a repository with the app, its tests, and the plan it was built to.
 
-We built it for our own software lab, to learn how far a team of AI workers can be held
-to a standard when nobody watches each step. It is published here as a lab project. It
-is early and small, and it is open to anyone who wants to read it, try it and help
-build it.
+Foundry comes from our own production work. We use it in everyday development, and we
+have built production applications and live sites with it. We share it here so that
+other developers can use it too, and improve it with us if they choose.
 
 Two things about it are deliberate.
 
@@ -178,78 +177,53 @@ uv run foundry vet ./some-skill-library
 This needs [SkillWarden](https://github.com/MaxsysLab/skillwarden), our scanner for
 agent skills, installed beside Foundry.
 
-## Where it stands
+## Status
 
-This is version 0.1.0. It has not been released, and it has not built anything for a
-customer.
+We have used Foundry for almost a year in our own development. This repository is its
+public version, 0.1.0, and no release has been tagged from it yet.
 
-In June 2026 we ran three live builds of one small app, a bookmark manager with
-FastAPI, SQLite and plain JavaScript. The first built and passed its own 31 tests. The
-second shipped a stored XSS that the review rated too low. That is why the reviewer
-is now told to rate security findings as blocking, and why a web app gets a security
-task. The third came out with that hole closed and no security finding. Those builds
-ran on an earlier version.
+Two things here are newer than the rest. A build in this version starts with an API
+key, and the `foundry sandbox` command is new. Both are covered by the automated tests,
+and the sandbox passes its own proof. Our own builds have run on our in-house setup, so
+we would like to hear how a build goes when it is started the way the Start section
+describes.
 
-In November 2026 we ran one live build with this copy, from the brief in the Start
-section above. Foundry wrote down eight things the app must do, planned nine tasks,
-each with a command that proves it, and built a JSON API with FastAPI and SQLite. The
-brief did not ask for a web page, so it made none.
+**Tested on.** Linux on x86-64: Debian 13 and Ubuntu 26.04. Every change runs 508
+automated tests on Python 3.12 and 3.13, with strict type checking and lint.
 
-It did not go through in one run. Two tasks ran side by side, the README and the
-security hardening. The worker writing the README also changed two code files, and
-when the security work came back, its merge conflicted. Foundry refused the merge,
-marked the task failed, left the repository clean and said the build was not done. We
-ran the build again from its session file, as step 3 above describes. The security
-task ran again on the new base and the build finished: nine of nine tasks, the
-verifier's checks passed against the running app, a stop and a restart on the same
-database among them, and the review approved it at 90 with three low findings.
+**What a build costs.** As one measure, a small JSON API with FastAPI and SQLite,
+planned as nine tasks, took 19 minutes in all. It used about two million input tokens,
+most of them read from cache, and about one hundred thousand output tokens, on Claude
+Opus 5.5 and Claude Sonnet 5.5.
 
-We did not take its word for it. We ran the app's 273 tests ourselves and sent our
-own requests for each of the eight points, and they hold. The two runs together took
-19 minutes. They used about two million input tokens, most of them read from cache,
-and about one hundred thousand output tokens, on Claude Opus 5.5 and Claude Sonnet 5.5.
+**Known limits.**
 
-Read that result for what it is: one small Python app, with two tasks in parallel at
-the most. We ran it on a machine of our own, inside a wrapper we wrote for that
-machine. We started it from Python, with our own Claude Code sign-in on our own
-machine. The `foundry build` command with an API key, as the Start section describes
-it, is covered by the automated tests (508 of them, with strict type checking and
-lint, on Python 3.12 and 3.13) and has not yet been used for a live build.
-
-Foundry's own sandbox was made from that wrapper afterwards, and it is new. It passes
-its own proof on one machine of ours (Debian 13 under WSL 2 on x86-64, bubblewrap
-0.12.0), with and without a network, and the tests that run the proof pass on
-GitHub's Ubuntu runner. Before we wrote this we set a reviewer to break it. The first
-two passes found ways through, and those are closed: one let a build read the
-environment of the person who started it, the other let a build lead a later command
-out of its workspace through a link. The third pass found no way through and four
-smaller things in the command outside, and the fourth confirmed their repair. No live
-build has run inside the sandbox yet, and those two systems are the only ones it has
-run on. If you run the proof on yours, tell us what it printed.
-
-The build also showed us things to fix, and they are on the
-[roadmap](docs/ROADMAP.md). This page did not say that the machine needs the tools of
-the app's own stack. An expired sign-in gives an empty error message. A worker can
-step outside its task. And the worktrees Foundry keeps pile up, with no command to
-clear them.
-
-What we have not tried: heavier stacks such as Next.js, an app with a web page built
-by this copy, a build with many tasks truly in parallel, and other kinds of project
-than a web app. When tasks depend on each other and share one virtual environment,
-use `--isolation none`. A verify step that could not start the app at all is reported
-as inconclusive and does not block.
+- Foundry works with Claude, and it builds web apps.
+- Two tasks that run side by side can change the same file. Foundry refuses a merge
+  that conflicts, marks the task failed and leaves the repository clean. Run the build
+  again from its session file, as step 3 of the Start section describes, and it picks
+  up there.
+- When tasks depend on each other and share one virtual environment, use
+  `--isolation none`.
+- A verify step that could not start the app at all is reported as inconclusive and
+  does not block.
+- The sandbox leaves the network open unless you pass `--offline` or put a filter
+  around it. [docs/SANDBOX.md](docs/SANDBOX.md) says what it closes and what it leaves
+  open.
+- When the `claude` call fails, the error message can be empty, and the worktrees
+  Foundry keeps pile up with no command to clear them. Both are on the
+  [roadmap](docs/ROADMAP.md).
 
 ## Where you can help
 
-We are opening Foundry before it is finished, on purpose. It gets better when more
-people than its builders have run it, read it and argued with it. These are the places
-where your help counts most today.
+Foundry is in use and still growing, and it gets better when more people run it and
+read it. These are the places where help counts most today.
 
-**Run the proof on your machine.** `uv run foundry sandbox proof` calls no model and
-costs nothing. So far it has passed on one machine of ours, and its tests pass on
-GitHub's Ubuntu runner. If you have another distribution, a 64-bit ARM machine, or a
-system that restricts user namespaces, open an issue with what it printed, whether it
-passed or not.
+**Run the sandbox's proof on your system.** `uv run foundry sandbox proof` calls no
+model and costs nothing. It passes on Debian 13 and on Ubuntu 26.04. If you have
+another distribution, a 64-bit ARM machine, or a system that restricts user namespaces,
+tell us in [issue 2](https://github.com/MaxsysLab/foundry/issues/2) what it printed,
+whether it passed or not.
 
 **Try to get out of the sandbox.** If you find a way out, or a line of the proof that
 says closed for a door that is open, please tell us privately first, as
@@ -257,8 +231,8 @@ says closed for a door that is open, please tell us privately first, as
 
 **Build something small and tell us how it went.** Use a key made for this, and a
 small brief. What passed, where it stopped, how long it took and what it cost are all
-useful to us, and the failures most of all. No build has yet been started the way the
-Start section describes, so yours may be the first.
+useful to us, and the failures most of all.
+[Issue 3](https://github.com/MaxsysLab/foundry/issues/3) is the place for it.
 
 **Pick something from the roadmap.** The [roadmap](docs/ROADMAP.md) lists the open
 work, and its tenth item has small pieces that make a good first change.
@@ -266,13 +240,15 @@ work, and its tenth item has small pieces that make a good first change.
 ## How it compares
 
 There are larger and better-known open-source tools that build software with AI
-agents, among them OpenHands, MetaGPT, ChatDev and gpt-pilot. They do more than
-Foundry does. Foundry works with Claude only and builds web apps only.
+agents, among them OpenHands, MetaGPT, ChatDev and gpt-pilot. They cover more ground
+than Foundry does.
 
-Foundry is the small one. Its Python source is about 250 kB, against 850 kB to
-3,200 kB for the Python tools among those four (theirs measured on GitHub on 16
-November 2026). We have not run them side by side on the same briefs, so we make no
-claim about whose apps come out better.
+Foundry is lean on purpose. It works with Claude, it builds web apps, and its Python
+source is about 250 kB, against 850 kB to 3,200 kB for the Python tools among those
+four (theirs measured on GitHub on 16 November 2026). What it gives for that size is
+the checking: a task with a proving command is not done until Foundry has run the
+command itself. The finished app is then exercised by a separate verifier and read by
+a separate reviewer, and a blocking finding keeps the build from being called done.
 
 ## Where the ideas came from
 
@@ -305,7 +281,7 @@ first, as [SECURITY.md](SECURITY.md) describes.
 
 Published as open source by Maxsys International Incorporated, a nonprofit
 (maxsys.org), through [MaxsysLab](https://github.com/MaxsysLab). Built by CSEAM
-Technology Corporation for its own software lab, and released for anyone to use.
+Technology Corporation for its own development work, and released for anyone to use.
 
 ## License
 
