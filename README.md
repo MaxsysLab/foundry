@@ -119,8 +119,8 @@ The last of these names Microsoft Foundry, which has nothing to do with this too
 1. Get the code and install it:
 
    ```bash
-   git clone https://github.com/MaxsysLab/maxsys-foundry.git
-   cd maxsys-foundry
+   git clone https://github.com/MaxsysLab/foundry.git
+   cd foundry
    uv sync
    ```
 

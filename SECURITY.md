@@ -10,7 +10,7 @@ else does.
 requests.**
 
 Report privately through
-[GitHub Private Vulnerability Reporting](https://github.com/MaxsysLab/maxsys-foundry/security/advisories/new)
+[GitHub Private Vulnerability Reporting](https://github.com/MaxsysLab/foundry/security/advisories/new)
 (preferred), or by email to **security@maxsys.org**.
 
 Please include a description of the issue, steps to reproduce or a proof of concept,

@@ -1,7 +1,7 @@
 version = 1
 SPDX-PackageName = "Foundry"
 SPDX-PackageSupplier = "Maxsys International Incorporated <https://maxsys.org>"
-SPDX-PackageDownloadLocation = "https://github.com/MaxsysLab/maxsys-foundry"
+SPDX-PackageDownloadLocation = "https://github.com/MaxsysLab/foundry"
 
 # Licence and copyright for every file in the repository. New source files may carry
 # an in-file SPDX-License-Identifier header as well; this entry covers those that
