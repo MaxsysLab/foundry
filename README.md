@@ -218,13 +218,14 @@ lint, on Python 3.12 and 3.13) and has not yet been used for a live build.
 
 Foundry's own sandbox was made from that wrapper afterwards, and it is new. It passes
 its own proof on one machine of ours (Debian 13 under WSL 2 on x86-64, bubblewrap
-0.12.0), with and without a network. Before we wrote this we set a reviewer to break
-it. The first two passes found ways through, and those are closed: one let a build
-read the environment of the person who started it, the other let a build lead a later
-command out of its workspace through a link. The third pass found no way through and
-four smaller things in the command outside, and the fourth confirmed their repair. No
-live build has run inside the sandbox yet, and we have not tried it on other systems.
-If you run the proof on yours, tell us what it printed.
+0.12.0), with and without a network, and the tests that run the proof pass on
+GitHub's Ubuntu runner. Before we wrote this we set a reviewer to break it. The first
+two passes found ways through, and those are closed: one let a build read the
+environment of the person who started it, the other let a build lead a later command
+out of its workspace through a link. The third pass found no way through and four
+smaller things in the command outside, and the fourth confirmed their repair. No live
+build has run inside the sandbox yet, and those two systems are the only ones it has
+run on. If you run the proof on yours, tell us what it printed.
 
 The build also showed us things to fix, and they are on the
 [roadmap](docs/ROADMAP.md). This page did not say that the machine needs the tools of
@@ -237,6 +238,30 @@ by this copy, a build with many tasks truly in parallel, and other kinds of proj
 than a web app. When tasks depend on each other and share one virtual environment,
 use `--isolation none`. A verify step that could not start the app at all is reported
 as inconclusive and does not block.
+
+## Where you can help
+
+We are opening Foundry before it is finished, on purpose. It gets better when more
+people than its builders have run it, read it and argued with it. These are the places
+where your help counts most today.
+
+**Run the proof on your machine.** `uv run foundry sandbox proof` calls no model and
+costs nothing. So far it has passed on one machine of ours, and its tests pass on
+GitHub's Ubuntu runner. If you have another distribution, a 64-bit ARM machine, or a
+system that restricts user namespaces, open an issue with what it printed, whether it
+passed or not.
+
+**Try to get out of the sandbox.** If you find a way out, or a line of the proof that
+says closed for a door that is open, please tell us privately first, as
+[SECURITY.md](SECURITY.md) describes.
+
+**Build something small and tell us how it went.** Use a key made for this, and a
+small brief. What passed, where it stopped, how long it took and what it cost are all
+useful to us, and the failures most of all. No build has yet been started the way the
+Start section describes, so yours may be the first.
+
+**Pick something from the roadmap.** The [roadmap](docs/ROADMAP.md) lists the open
+work, and its tenth item has small pieces that make a good first change.
 
 ## How it compares
 

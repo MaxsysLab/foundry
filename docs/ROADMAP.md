@@ -29,8 +29,9 @@ is still open, in the order we think it matters:
 - **The build's verdict.** Inside the sandbox the workers and Foundry are the same
   user, so a worker that set out to cheat could change the session file a build
   resumes from. Foundry's own records should sit where the workers cannot write.
-- **More machines.** The proof has run on one machine of ours. Other distributions,
-  64-bit ARM and systems that restrict user namespaces are untried.
+- **More machines.** The proof has run on one machine of ours and on GitHub's Ubuntu
+  runner. Other distributions, 64-bit ARM and systems that restrict user namespaces
+  are untried.
 - **More eyes.** One reviewer went over it four times and found real faults in the
   first two. A sandbox is the kind of code that a second and a third reader make
   better. [SECURITY.md](../SECURITY.md) says how to tell us about a way out.
