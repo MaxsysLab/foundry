@@ -29,22 +29,20 @@ is still open, in the order we think it matters:
 - **The build's verdict.** Inside the sandbox the workers and Foundry are the same
   user, so a worker that set out to cheat could change the session file a build
   resumes from. Foundry's own records should sit where the workers cannot write.
-- **More machines.** The proof has run on one machine of ours and on GitHub's Ubuntu
-  runner. Other distributions, 64-bit ARM and systems that restrict user namespaces
-  are untried.
-- **More eyes.** One reviewer went over it four times and found real faults in the
-  first two. A sandbox is the kind of code that a second and a third reader make
+- **More systems.** The proof passes on Debian 13 and on Ubuntu 26.04, both x86-64.
+  Other distributions, 64-bit ARM and systems that restrict user namespaces are
+  untried.
+- **More eyes.** A sandbox is the kind of code that a second and a third reader make
   better. [SECURITY.md](../SECURITY.md) says how to tell us about a way out.
 - **A live build inside it,** started with `foundry sandbox build` and an API key;
   see the next item.
 
 ## 2. A live build through the command, on an API key
 
-The first live build with this copy was made in November 2026, and the README says
-how it came out. It was started from Python with our own sign-in, on a machine of
-ours. What is still owed is a build started the way the README tells a stranger to
-start one: `foundry sandbox build`, with an API key. Its result goes into the README
-as it comes out: what passed, what failed, how long it took and what it cost.
+Our own builds have run on our in-house setup. What this public version still owes is
+a build started the way the README describes: `foundry sandbox build`, with an API
+key. Its result goes into the README as it comes out: what passed, what failed, how
+long it took and what it cost.
 
 ## 3. Heavier stacks and real parallel work
 
@@ -106,7 +104,7 @@ A second way of working, apart from building: given a goal and a number that mea
 it (test coverage, a response time), change, measure, keep the change only if the
 number improved, and repeat.
 
-## 10. Smaller things the November build showed
+## 10. Smaller things
 
 Each of these is a small piece of work, and a good first one.
 

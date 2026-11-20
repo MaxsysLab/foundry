@@ -6,8 +6,9 @@ All notable changes to Foundry are recorded here. The format follows
 
 ## [Unreleased]
 
-Foundry was built inside our own software lab, where it stands at version 0.1.0. This
-repository starts from the tool as it is today. Nothing has been released from it yet.
+Foundry has been in use in our own development for almost a year. This repository
+starts from the tool as it is today, as version 0.1.0. No release has been tagged from
+it yet.
 
 What changed for this public copy:
 

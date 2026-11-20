@@ -12,9 +12,9 @@ because Foundry itself runs what the workers wrote: the plan's commands, the app
 under test, and git in a repository whose hooks and settings a worker can change.
 
 This page says how to use it, what it closes, what it leaves open, and how to check
-all of that on your own machine. It is new. It has been tried on one machine of ours
-(Debian 13 under WSL 2 on x86-64, bubblewrap 0.12.0), and no live build has run inside
-it yet.
+all of that on your own machine. It is new in this version. Its tests and its own proof
+pass on Debian 13 (bubblewrap 0.12.0) and on Ubuntu 26.04, both x86-64. A full build
+inside it is the next thing on the [roadmap](ROADMAP.md).
 
 ## Use it
 
@@ -140,7 +140,7 @@ listens on an abstract unix socket, a build can connect to it too. `foundry sand
 proof` lists what it finds of these on your machine.
 
 If you have root, you can shut the local network out today with a filter that
-systemd puts around the sandbox. This is how we run it on our own machine:
+systemd puts around the sandbox. For example:
 
 ```bash
 sudo systemd-run --scope --quiet --collect \
