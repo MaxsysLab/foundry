@@ -28,3 +28,5 @@ What changed for this public copy:
   whole build inside bubblewrap, without root. `docs/SANDBOX.md` says what it closes
   and what it leaves open.
 - A session file's folder is made when the session is first saved.
+- When the planner's `claude` command fails, the error carries what it printed on its
+  standard output as well as its error stream, so a failed sign-in shows its reason.
