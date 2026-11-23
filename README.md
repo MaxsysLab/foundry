@@ -45,7 +45,10 @@ a good way to learn how such a system is put together.
    security and performance. Injection, broken authentication, path traversal, exposed
    secrets and the like are to be rated as blocking. If
    [SkillWarden](https://github.com/MaxsysLab/skillwarden) is installed, its critical
-   findings are added.
+   findings are added. The scan reads the committed HEAD tree in a temporary
+   snapshot, excluding working edits, caches and retained worktrees. Committed
+   symlinks are scanned as target text, not followed; an unavailable snapshot or
+   submodule leaves security corroboration unavailable, not clean.
 
 Every worker is given the same short constitution: the standard for quality, testing,
 security and honest reporting. You can replace it with your own (`--constitution`).

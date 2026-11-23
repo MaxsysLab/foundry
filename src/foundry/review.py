@@ -51,7 +51,7 @@ def run_review(worker: Worker, goal: str, workspace: Path, constitution: str = "
     # composing). None = the scan could not be performed, which is NOT a clean scan:
     # record that the corroboration is missing so the verdict is read with that in
     # mind, rather than silently crediting an absent check.
-    sw = security.critical_findings(workspace)
+    sw = security.committed_critical_findings(workspace)
     if sw is None:
         review.security_corroborated = False
     else:

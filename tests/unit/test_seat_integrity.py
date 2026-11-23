@@ -294,7 +294,7 @@ def test_vet_still_rejects_a_complete_high_scan(monkeypatch, tmp_path):
 
 
 def test_review_records_when_corroboration_was_unavailable(monkeypatch, tmp_path):
-    monkeypatch.setattr(security, "critical_findings", lambda _p: None)
+    monkeypatch.setattr(security, "committed_critical_findings", lambda _p: None)
 
     class W:
         def execute(self, _s, _i, _w, seat="generalist"):
@@ -305,7 +305,7 @@ def test_review_records_when_corroboration_was_unavailable(monkeypatch, tmp_path
 
 
 def test_review_records_when_corroboration_ran_clean(monkeypatch, tmp_path):
-    monkeypatch.setattr(security, "critical_findings", lambda _p: [])
+    monkeypatch.setattr(security, "committed_critical_findings", lambda _p: [])
 
     class W:
         def execute(self, _s, _i, _w, seat="generalist"):
@@ -319,7 +319,7 @@ def test_review_records_when_corroboration_ran_clean(monkeypatch, tmp_path):
 def test_a_real_critical_still_blocks(monkeypatch, tmp_path):
     monkeypatch.setattr(
         security,
-        "critical_findings",
+        "committed_critical_findings",
         lambda _p: [ReviewFinding(axis="security", severity="high", issue="rce")],
     )
 
@@ -336,7 +336,7 @@ def test_a_real_critical_still_blocks(monkeypatch, tmp_path):
 def test_missing_corroboration_is_surfaced_in_the_verdict_event(monkeypatch, tmp_path):
     """Recording it in BuildState is not enough — a field nobody reads is not a
     control. The operator has to see that the axis rests on one opinion."""
-    monkeypatch.setattr(security, "critical_findings", lambda _p: None)
+    monkeypatch.setattr(security, "committed_critical_findings", lambda _p: None)
     monkeypatch.setattr(constants, "DISCOVERY", False)
     monkeypatch.setattr(constants, "VERIFY", False)
     monkeypatch.setattr(constants, "ARCHETYPES", False)
