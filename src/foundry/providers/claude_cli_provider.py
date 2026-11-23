@@ -37,12 +37,12 @@ class ClaudeCliProvider(LLMProvider):
                 env=procenv.clean_env(),
             )
         if proc.returncode != 0:
-            raise RuntimeError(f"claude CLI failed ({proc.returncode}): {_failure_reason(proc)}")
+            raise RuntimeError(f"claude CLI failed ({proc.returncode}): {failure_reason(proc)}")
         return proc.stdout
 
 
-def _failure_reason(proc: subprocess.CompletedProcess[str]) -> str:
-    """What `claude` said when it failed.
+def failure_reason(proc: subprocess.CompletedProcess[str]) -> str:
+    """What `claude` said when it failed. The command-line worker uses it too.
 
     `claude -p` writes some failures, such as an expired sign-in, to its standard
     output and leaves its error stream empty, so both streams are read.

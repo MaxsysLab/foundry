@@ -210,8 +210,7 @@ Opus 5.5 and Claude Sonnet 5.5.
 - The sandbox leaves the network open unless you pass `--offline` or put a filter
   around it. [docs/SANDBOX.md](docs/SANDBOX.md) says what it closes and what it leaves
   open.
-- When the `claude` call fails, the error message can be empty, and the worktrees
-  Foundry keeps pile up with no command to clear them. Both are on the
+- The worktrees Foundry keeps pile up with no command to clear them. That is on the
   [roadmap](docs/ROADMAP.md).
 
 ## Where you can help

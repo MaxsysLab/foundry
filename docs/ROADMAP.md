@@ -108,10 +108,6 @@ number improved, and repeat.
 
 Each of these is a small piece of work, and a good first one.
 
-- **An error that says why.** When the planner's `claude` call fails, the message is
-  empty, because the reason is on the command's standard output and Foundry shows
-  only its error stream. With an expired sign-in the build goes on to fail one call
-  later, still without a reason.
 - **SkillWarden pointed at the app.** The check after a build scans the whole
   workspace, with the worktrees Foundry kept and the test caches in it. It should
   scan the tree as committed.
