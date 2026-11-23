@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from foundry import constants, procenv
+from foundry.providers.claude_cli_provider import failure_reason
 
 
 class TransientWorkerError(RuntimeError):
@@ -181,7 +182,7 @@ class CliBuildWorker(Worker):
             env=procenv.clean_env(),
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"worker failed ({proc.returncode}): {proc.stderr.strip()[:300]}")
+            raise RuntimeError(f"worker failed ({proc.returncode}): {failure_reason(proc)}")
         return proc.stdout
 
 

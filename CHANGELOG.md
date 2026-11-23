@@ -30,3 +30,4 @@ What changed for this public copy:
 - A session file's folder is made when the session is first saved.
 - When the planner's `claude` command fails, the error carries what it printed on its
   standard output as well as its error stream, so a failed sign-in shows its reason.
+  A worker started through the `claude` command reports a failure the same way.
